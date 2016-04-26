@@ -13,7 +13,7 @@
                                        env))
           ((cond? exp) (eval (cond-if exp) env))
           ((application? exp) (apply (eval (operator exp) env)
-                                     (list-of-values (operands exp))
+                                     (list-of-values (operands exp) env)
                                      env))
           (else (error "UNKNOWN EXPRESSION TYPE -- EVAL" exp))))
 
@@ -160,7 +160,7 @@
 (define (operator exp)
     (car exp))
 
-(define (oprands exp)
+(define (operands exp)
     (cdr exp))
 
 (define (no-oprands? ops)
