@@ -1,4 +1,5 @@
 ;设置好类型与执行过程的映射关系
+(load "table.scm")
 (load "core.scm")
 
 (define (install-exp-type exp-type procedure)
