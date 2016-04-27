@@ -24,9 +24,9 @@
           ((conpound-procedure? procedure)
            (eval-sequence (procedure-body procedure)
                           (extend-environment 
-                            procedure-parameter procedure
-                            arguments
-                            procedure-environment procedure)))
+                           (procedure-parameter procedure)
+                           arguments
+                           procedure-environment procedure)))
           (else (error "UNKOWN PROCUDURE TYPE -- APPLY" procedure))))
 
 ;eval all parameters of exp and generate a list of values
@@ -204,9 +204,102 @@
                           (sequence->exp (cond-action first))
                           (expand-clause rest))))))
 
+(define (true? exp)
+    (not (eq? exp false)))
+
+(define (false? exp)
+    (eq? exp false))
+
+(define (make-procedure parameters body env)
+    (list 'procedure parameters body env))
+
+(define (compound-procedure? p)
+    (tagged-list? p 'procedure))
+
+(define (procedure-parameter p)
+    (cadr p))
+
+(define (procedure-body p)
+    (caddr p))
+
+(define (procedure-environment p)
+    (cadddr p))
+
+(define (enclosing-environment env)
+    (cdr env))
+
+(define (first-frame env)
+    (car env))
+
+(define (the-empty-environment evn)
+    '())
+
+(define (make-frame variables values)
+    (cons variables values))
+
+(define (frame-variables frame)
+    (car frame))
+
+(define (frame-values frame)
+    (cdr frame))
+
+(define (add-binding-to-frame var val frame)
+    (set-car! frame (cons var (car frame)))
+    (set-cdr! frame (cons val (cdr frame))))
+
+
+(define (extend-environment variables values base-env)
+    (if (= (length variables) (length values))
+        (cons (make-frame variables values) base-env)
+        (if (< (length variables) (length values))
+            (error "TOO FEW ARGUMENTS SUPPLIED!" variables values)
+            (error "TOO MANY ARGUMENTS SUPPLIED!" variables values))))
+
+(define (lookup-variable-value var env)
+    (define (env-loop env)
+        (define (scan vars vals)
+                (cond ((null? vars)
+                       (env-loop (enclosing-environment env)))
+                      ((eq? var (car vars))
+                       (car vals))
+                      (else (scan (cdr vars) (cdr vals)))))
+        (if (eq? env the-empty-environment)
+            (error "UNBOUNDED VARIABLE" var)
+            (let ((frame (first-frame env)))
+                 (scan (frame-variables frame)
+                       (frame-values frame)))))
+    (env-loop env))
+
+(define (set-variable-value! var val env)
+    (define (env-loop env)
+        (define (scan vars vals)
+                (cond ((null? vars)
+                       (env-loop (enclosing-environment env)))
+                      ((eq? var (car vars))
+                       (set-car! vals val))
+                      (else (scan (cdr vars) (cdr vals)))))
+        (if (eq? env the-empty-environment)
+            (error "UNBOUNDED VARIABLE" var)
+            (let ((frame (first-frame env)))
+                 (scan (frame-variables frame)
+                       (frame-values frame)))))
+    (env-loop env))
+
+(define (define-variable-value! var val env)
+    (let ((frame (first-frame)))
+        (define (scan vars vals)
+            (cond ((null? vars)
+                   (add-binding-to-frame var val frame))
+                  ((eq? var (car vars))
+                   (set-car! vals val))
+                  (else (scan (car vars) (car vals)))))
+        (scan (frame-variables frame)
+              (frame-values frame))))
 
 
 
+        
+                     
 
 
 
