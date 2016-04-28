@@ -297,7 +297,10 @@
               (frame-values frame))))
 
 
-
+(define (setup-environment)
+    (let ((init-env (extend-environment (primitive-procedure-names)
+                                         primitive-procedure-objects)
+                                         the-en)
         
                      
 
