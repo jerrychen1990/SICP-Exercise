@@ -11,28 +11,29 @@
           ((if? exp) (eval-if exp env))
           ((lambda? exp) (make-procedure (lambda-parameter exp)
                                          (lambda-body exp)
-                                         evv))
+                                         env))
           ((begin? exp) (eval-sequence (begin-actions exp)
                                        env))
           ((cond? exp) (eval (cond-if exp) env))
-          ((application? exp) (apply (eval (operator exp) env)
+          ((application? exp) (my-apply (eval (operator exp) env)
                                      (list-of-values (operands exp) env)))
           (else (error "UNKNOWN EXPRESSION TYPE -- EVAL" exp))))
 
 ;apply arguments to procedure
-(define (apply procedure arguments)
-    (display procedure)
+(define (my-apply procedure arguments)
+    (user-print procedure)
     (newline)
     (display arguments)
     (newline)
     (cond ((primitive-procedure? procedure)
            (apply-primitive-procedure procedure arguments))
           ((compound-procedure? procedure)
+           (newline)
            (eval-sequence (procedure-body procedure)
                           (extend-environment 
                            (procedure-parameter procedure)
                            arguments
-                           procedure-environment procedure)))
+                           (procedure-environment procedure))))
           (else (error "UNKOWN PROCUDURE TYPE -- APPLY" procedure))))
 
 ;eval all parameters of exp and generate a list of values
@@ -50,7 +51,10 @@
 
 ;eval a sequence of expressions
 (define (eval-sequence exps env)
-    (cond ((last-exp? exps) (eval exps env))
+    (display "eval sequence: ")
+    (display exps)
+    (newline)
+    (cond ((last-exp? exps) (eval (first-exp exps) env))
           (else (eval (first-exp exps) env)
                 (eval-sequence (rest-exp exps) env))))
 
@@ -63,7 +67,7 @@
 ;definition operation
 (define (eval-definition exp env)
     (define-variable-value! (definition-variable exp)
-                            (definition-value exp)
+                            (eval (definition-value exp) env)
                             env)
     'OK)
 
@@ -119,10 +123,6 @@
     (cddr exp))
 
 (define (make-lambada parameter body)
-    (display parameter)
-    (newline)
-    (display body)
-    (newline)
     (cons 'lambda (cons parameter body)))
 
 (define (if? exp)
@@ -134,10 +134,10 @@
 (define (if-consequent exp)
     (caddr exp))
 
-(define (if-predicate exp)
+(define (if-alternative exp)
     (if (null? (cdddr exp))
         'false
-        (cdddr exp)))
+        (cadddr exp)))
 
 (define (make-if predicate consequent altenative)
     (list 'if predicate consequent altenative))
@@ -222,12 +222,9 @@
     (eq? exp false))
 
 (define (make-procedure parameters body env)
-    (display 'make-procedure)
-    (newline)
-    (display body)
-    (newline)
-    (display parameters)
-    (newline)
+    ;(display "make-procedure")
+    ;(display body)
+    ;(newline)
     (list 'procedure parameters body env))
 
 (define (compound-procedure? p)
@@ -266,6 +263,10 @@
 
 
 (define (extend-environment variables values base-env)
+    (display variables)
+    (newline)
+    (display values)
+    (newline)
     (if (= (length variables) (length values))
         (cons (make-frame variables values) base-env)
         (if (< (length variables) (length values))
@@ -273,7 +274,10 @@
             (error "TOO MANY ARGUMENTS SUPPLIED!" variables values))))
 
 (define (lookup-variable-value var env)
-    (define (env-loop env)
+    (display "lookup: ")
+    (display var)
+    (newline)
+    (define (env-loop env)    
         (define (scan vars vals)
                 (cond ((null? vars)
                        (env-loop (enclosing-environment env)))
@@ -303,10 +307,6 @@
     (env-loop env))
 
 (define (define-variable-value! var val env)
-   (display var)
-   (newline)
-   (display val)
-   (newline)
    (let ((frame (first-frame env)))
         (define (scan vars vals)
             (cond ((null? vars)
@@ -337,7 +337,12 @@
     (list (list 'car car)
           (list 'cdr cdr)
           (list 'cons cons)
-          (list 'null? null?)))
+          (list 'null? null?)
+          (list '+ +)
+          (list '= =)
+          (list '- -)
+          (list '* *)
+          (list '/ /)))
 
 (define primitive-procedure-names
     (map car primitive_procedures))
@@ -347,8 +352,14 @@
 
 
 (define (apply-primitive-procedure proc args)
+    ;(display "primitive: ")
+    ;(display (primitive-implementation proc))
+    ;(newline)
+    ;(display args)
+    ;(newline)
     (apply-in-underlying-scheme (primitive-implementation proc) args))
 
+(define apply-in-underlying-scheme apply)
 
 (define the-global-environment
     (setup-environment))
