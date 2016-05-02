@@ -45,5 +45,24 @@
                     false)))
         (loop-predicts predicts)))
 
+(define (last-predict? predicts)
+    (if (null? (cdr predicts))
+         'true
+         'false))
+
+
+(define (and-if exp env)
+    (let ((predicts (cdr exp)))
+        (make-if (first-predict predicts)
+                 (make-if (last-predict? predicts)
+                          'true
+                          (cons 'and (rest-predict predicts)))
+                 'false)))
+
+(define (eval-and exp env)
+    (eval (and-if exp env) env))
+
+;or 的情形同理
+
 (load "start-loop.scm")
 
