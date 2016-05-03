@@ -1,8 +1,9 @@
+(load "common.scm")
 ;eval an expression
 (define (eval exp env)
-    (display "exp: ")
-    (display exp)
-    (newline)
+    (display-ln "exp: ")
+    (display-ln exp)
+    
     (cond ((self-evaluating? exp) exp)
           ((variable? exp) (lookup-variable-value exp env))
           ((quoted? exp) (text-of-quoted exp))
@@ -21,14 +22,15 @@
 
 ;apply arguments to procedure
 (define (my-apply procedure arguments)
+    (display "apply ")
     (user-print procedure)
-    (newline)
-    (display arguments)
-    (newline)
+    (display "args: ")
+    (display-ln arguments)
+    
     (cond ((primitive-procedure? procedure)
            (apply-primitive-procedure procedure arguments))
           ((compound-procedure? procedure)
-           (newline)
+           
            (eval-sequence (procedure-body procedure)
                           (extend-environment 
                            (procedure-parameter procedure)
@@ -51,9 +53,9 @@
 
 ;eval a sequence of expressions
 (define (eval-sequence exps env)
-    (display "eval sequence: ")
-    (display exps)
-    (newline)
+    (display-ln "eval sequence: ")
+    (display-ln exps)
+    
     (cond ((last-exp? exps) (eval (first-exp exps) env))
           (else (eval (first-exp exps) env)
                 (eval-sequence (rest-exp exps) env))))
@@ -111,7 +113,7 @@
 (define (definition-value exp)
     (if (symbol? (cadr exp))
         (caddr exp)
-        (make-lambada (cdadr exp) (cddr exp))))
+        (make-lambda (cdadr exp) (cddr exp))))
 
 (define (lambda? exp)
     (tagged-list? exp 'lambda))
@@ -122,7 +124,7 @@
 (define (lambda-body exp)
     (cddr exp))
 
-(define (make-lambada parameter body)
+(define (make-lambda parameter body)
     (cons 'lambda (cons parameter body)))
 
 (define (if? exp)
@@ -222,9 +224,9 @@
     (eq? exp false))
 
 (define (make-procedure parameters body env)
-    ;(display "make-procedure")
-    ;(display body)
-    ;(newline)
+    ;(display-ln "make-procedure")
+    ;(display-ln body)
+    ;
     (list 'procedure parameters body env))
 
 (define (compound-procedure? p)
@@ -263,10 +265,10 @@
 
 
 (define (extend-environment variables values base-env)
-    (display variables)
-    (newline)
-    (display values)
-    (newline)
+    (display-ln variables)
+    
+    (display-ln values)
+    
     (if (= (length variables) (length values))
         (cons (make-frame variables values) base-env)
         (if (< (length variables) (length values))
@@ -274,9 +276,9 @@
             (error "TOO MANY ARGUMENTS SUPPLIED!" variables values))))
 
 (define (lookup-variable-value var env)
-    (display "lookup: ")
-    (display var)
-    (newline)
+    (display-ln "lookup: ")
+    (display-ln var)
+    
     (define (env-loop env)    
         (define (scan vars vals)
                 (cond ((null? vars)
@@ -362,11 +364,9 @@
 
 
 (define (apply-primitive-procedure proc args)
-    ;(display "primitive: ")
-    ;(display (primitive-implementation proc))
-    ;(newline)
-    ;(display args)
-    ;(newline)
+    ;(display-ln "primitive: ")
+    ;(display-ln (primitive-implementation proc))
+    ;(display-ln args)
     (apply-in-underlying-scheme (primitive-implementation proc) args))
 
 (define apply-in-underlying-scheme apply)
@@ -388,21 +388,17 @@
 
 (define (prompt-for-input string)
     (newline)
-    (newline)
-    (display string)
-    (newline))
+    (display-ln string))
 
 (define (announce-output string)
-    (newline)
-    (display string)
-    (newline))
+    (display-ln string))
 
 (define (user-print object)
     (if (compound-procedure? object)
-        (display (list 'compound-procedure
+        (display-ln (list 'compound-procedure
                        (procedure-parameter object)
                        (procedure-body object)))
-        (display object)))
+        (display-ln object)))
 
 
 
