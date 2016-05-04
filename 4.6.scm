@@ -8,7 +8,14 @@
 (define (let-body exp)
     (cddr exp))
 
- (define (eval exp env)
+(define (make-let let-cond let-body)
+    (display "make: ")
+    (display-ln let-cond)
+    (display-ln let-body)
+    (append (list 'let let-cond) let-body))
+
+
+(define (eval exp env)
      (display "exp: ")
      (display exp)
      (newline)
@@ -41,10 +48,10 @@
                 (cons (make-lambda variables let-body) values))))
 
 ;test case 
-(define input
-    '(let ((a 3) (b 4)) (* a b)))
+;(define input
+;   '(let ((a 3) (b 4)) (* a b)))
 
-(eval input the-global-environment)
+;(eval input the-global-environment)
 
 
 

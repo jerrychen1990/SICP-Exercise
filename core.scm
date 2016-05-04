@@ -265,9 +265,9 @@
 
 
 (define (extend-environment variables values base-env)
-    (display-ln variables)
+    ;(display-ln variables)
     
-    (display-ln values)
+    ;(display-ln values)
     
     (if (= (length variables) (length values))
         (cons (make-frame variables values) base-env)
